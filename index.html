@@ -10,6 +10,74 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+    <style>
+    .center { display: block; margin-left: auto; margin-right: auto; text-align: center;}
+    .shadow {
+      -moz-box-shadow: 10px 10px 5px #888;
+      -webkit-box-shadow: 10px 10px 5px #888;
+      box-shadow: 10px 10px 5px #888;
+    }
+    .twist {
+      
+      transition-property: box-shadow, border-radius, transform:rotate;
+      transition-duration: 1s, 2s, 1s;
+      -moz-transition-property: -moz-box-shadow, -moz-border-radius, -moz-transform:rotate;
+      -moz-transition-duration: 1s, 2s, 1s;
+      -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius, -webkit-transform:rotate;
+      -webkit-transition-duration: 1s, 2s, 1s;
+      -o-transition-property: -o-box-shadow, -o-border-radius, -o-transform:rotate;
+      -o-transition-duration: 1s, 2s, 1s;
+      -ms-transition-property: -ms-box-shadow, -ms-border-radius, -ms-transform:rotate;
+      -ms-transition-duration: 1s, 2s, 1s;
+
+    }
+    .twist:hover {
+      box-shadow: 0 0 4em 5em rgba(127,127,127,0.4);
+      transition-property: box-shadow, border-radius, transform:rotate;
+      transition-duration: 2s, 3s, 0.7s;
+      -moz-box-shadow: 0 0 4em 5em rgba(127,127,127,0.4);
+      -moz-transition-property: -moz-box-shadow, -moz-border-radius, -moz-transform:rotate;
+      -moz-transition-duration: 2s, 3s, 0.7s;
+      -webkit-box-shadow: 0 0 4em 5em rgba(127,127,127,0.4);
+      -webkit-transition-property: -webkit-box-shadow, -webkit-border-radius, -webkit-transform:rotate;
+      -webkit-transition-duration: 2s, 3s, 0.7s;
+      -o-box-shadow: 0 0 4em 5em rgba(127,127,127,0.4);
+      -o-transition-property: -o-box-shadow, -o-border-radius, -o-transform:rotate;
+      -o-transition-duration: 2s, 3s, 0.7s;
+      -ms-box-shadow: 0 0 4em 5em rgba(127,127,127,0.4);
+      -ms-transition-property: -ms-box-shadow, -ms-border-radius, -ms-transform:rotate;
+      -ms-transition-duration: 2s, 3s, 0.7s;
+
+      transform:rotate(2deg);
+      -moz-transform:rotate(2deg);
+      -webkit-transform:rotate(2deg);
+      -ms-transform:rotate(2deg);
+      -o-transform:rotate(2deg);
+    }
+    img.store {
+      width: 172px;
+    }
+
+    #and {
+      vertical-align: top;
+      margin-top: 1px;
+
+    }
+
+    #ios {
+      vertical-align: top;
+      padding-top: 0px;
+
+    }
+    .mbutton {
+      display: inline;
+      vertical-align: top;
+    }
+    </style>
+
+    <link href="favicon.png" rel="icon" type="image/png"> 
+    <link href="http://apps.g-licio.us/favicon.ico" rel="shortcut icon apple-touch-icon" />
+    
     <title>FaceTag by GrinnellAppDev</title>
   </head>
 
@@ -19,58 +87,57 @@
 
         <header>
           <h1>FaceTag</h1>
-          <h2>Static informational pages for the FaceTag apps</h2>
         </header>
 
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/GrinnellAppDev/FaceTag/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/GrinnellAppDev/FaceTag/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/GrinnellAppDev/FaceTag" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
 
         <hr>
 
         <section id="main_content">
+        <p><img class="center shadow twist" src="https://raw.github.com/GrinnellAppDev/FaceTag-iOS/master/FaceTag/Images.xcassets/AppIcon.appiconset/iTunesArtwork.png" alt="FaceTag Splash"></p>
           <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+<a name="about" class="anchor" href="#about"><span class="octicon octicon-link"></span></a>About</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
-
-<pre><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
-</code></pre>
-
-<p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<p>FaceTag is a fun game for Android and iOS, written for MHacks Winter 2014. Set up a game with your friends and specify the duration of the game (time or points). Everyone will be given a target to tag! The first person to get a picture of their target's face gets a point and the game proceeds to the next round. Game Rules: Find your target and acquire a picture with their face clearly visible. Picture cannot be a picture of a picture. Other hunters will confirm that the picture is an original picture.</p>
 
 <h3>
-<a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+<a name="get-sb" class="anchor" href="#get-sb"><span class="octicon octicon-link"></span></a>Get S&amp;B</h3>
 
-<p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+<p>FaceTag is not yet available for download....</p>
+
+<h4>
+<a name="source" class="anchor" href="#source"><span class="octicon octicon-link"></span></a>Source</h4>
+
+<p>All of our source is licenced under the GPL-v3 and is available on Github:</p>
+<ul>
+<li>AppDev Github -- <a href="https://github.com/GrinnellAppDev">https://github.com/GrinnellAppDev</a></li>
+<li>iOS source code -- <a href="https://github.com/GrinnellAppDev/FaceTag-iOS">https://github.com/GrinnellAppDev/FaceTag-iOS</a></li>
+<li>Android source code -- <a href="https://github.com/GrinnellAppDev/FaceTag-Android">https://github.com/GrinnellAppDev/FaceTag-Android</a></li>
+</ul>
 
 <h3>
-<a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+<a name="contributors" class="anchor" href="#contributors"><span class="octicon octicon-link"></span></a>Contributors</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>Special Thanks to the Grinnell AppDev Team!<br>
+<em>Colin Tremblay '14 (<a href="https://github.com/tremblay" class="user-mention">@tremblay</a>)</em><br>
+<em>Maijid Moujaled '14 (<a href="https://github.com/drjid" class="user-mention">@drjid</a>)</em><br>
+<em>Patrick Triest '15 (<a href="https://github.com/triestpa" class="user-mention">@triestpa</a>)</em></p>
+<em>Andrew Kelley '14 (<a href="https://github.com/southpaw27" class="user-mention">@southpaw27</a>)</em><br>
 
-<h3>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
-
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
-
-<h3>
-<a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-<p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
+<p>For App Support, feedback, suggestions etc. please email <a href="mailto:appdev@grinnell.edu">appdev@grinnell.edu</a></p>
         </section>
 
         <footer>
           FaceTag is maintained by <a href="https://github.com/GrinnellAppDev">GrinnellAppDev</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+          This page was partially generated by <a href="http://pages.github.com">GitHub Pages</a>.<br>
+          Based on the <em>Tactile</em> theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.<br>
+          Theme alterations and page content managed by <a href="https:github.com/tremblay">Colin Tremblay</a>.<br>
+          FaceTag artwork and images created by <a href="https://github.com/southpaw27">Andrew Kelley</a>.<br>
         </footer>
 
-        
       </div>
     </div>
+    
+    <a href="https://github.com/GrinnellAppDev"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub"></a>
+    <a href="http://g-licio.us"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://raw.github.com/GrinnellAppDev/DB/gh-pages/images/more-projects.png" alt="More AppDev Projects"></a>
   </body>
 </html>
