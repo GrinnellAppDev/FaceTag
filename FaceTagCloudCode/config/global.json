@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "FaceTag": {
+            "applicationId": "97s1dXeGVg72YmhWjZVFXQvWFILwyyV78pftvQBe", 
+            "masterKey": "xgCLNuSX5NFSrI78BQpxTTBlQqRCnyqVLra6KygA"
+        }, 
+        "_default": {
+            "link": "FaceTag"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.16"
+    }
+}
