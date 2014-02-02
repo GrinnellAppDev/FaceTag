@@ -6,17 +6,8 @@ Parse.Cloud.define("hello", function(request, response) {
 }); // hello function
 
 
-//Before we save the Game Object. We do some initial setting up. 
-
-
-Parse.Cloud.beforeSave("Game", function(request, response) {
-	console.log("BEFORE SAVE GAME CALLED!"); 
-	var game = request.object;
-
-	if (game.isNew()) {
-
-	game.set("round", 1); 
-
+// createPairings creates the pairings for a game.
+function createPairings() {
 	var participants = request.object.get("participants"); //Array of user ids of participants. 
 
 	//Clone array. http://davidwalsh.name/javascript-clone-array
@@ -28,21 +19,32 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i]; 
 		var target = userId;
-
 		while(target == userId) {
 			//Pick a random target. 
 			var random = Math.floor((Math.random() * participants.length) );
 			target = participants[random]; 
-		}
-
+		} // while
 		//Add this pairing. 
 		pairings[userId] = target; 
-	}
+	} // for
+} // createPairings()
+
+//Before we save the Game Object. We do some initial setting up. 
+
+Parse.Cloud.beforeSave("Game", function(request, response) {
+	console.log("BEFORE SAVE GAME CALLED!"); 
+	var game = request.object;
+
+	if (game.isNew()) {
+
+	game.set("round", 1); 
+
+	createPairings();
 
 	console.log("The pairings changed.."); 
 	request.object.set("pairings", pairings);
 	console.log("Saving game object"); 
-}
+} // if(new game)
 response.success();  
 });
 
