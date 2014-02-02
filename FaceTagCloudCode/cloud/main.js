@@ -111,9 +111,9 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 
 				game.set("scoreboard", scoreboard);
 
+				// reset pairings
 				createPairings(game);
-
-				console.log("resettings pairings");
+				console.log("resetting pairings");
 
 				game.save(null, {
 					success: function(game) {
@@ -148,7 +148,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 					var participants = game.get('participants');
 					var count = participants.length;
 					if (count < 20)
-						thresh = count / 2;
+						thresh = floor(count / 2);
 					else thresh = 10;
 					phototag.set("threshold", thresh);
 					phototag.set("rejection", 0);
