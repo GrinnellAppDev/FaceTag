@@ -26,6 +26,7 @@ function createPairings(game) {
 		//Add this pairing. 
 		pairings[userId] = target;
 	} // for
+	game.set("pairings", pairings);
 } // createPairings()
 
 //Before we save the Game Object. We do some initial setting up. 
@@ -41,7 +42,7 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 		createPairings(game);
 
 		console.log("The pairings changed..");
-		game.set("pairings", pairings);
+		
 		console.log("Saving game object");
 	} // if(new games)
 	response.success();
@@ -112,7 +113,6 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 
 				createPairings(game);
 
-				game.set("pairings", pairings);
 				console.log("resettings pairings");
 
 				game.save(null, {
