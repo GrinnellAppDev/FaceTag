@@ -3,7 +3,7 @@
 // For example:
 Parse.Cloud.define("hello", function(request, response) {
   response.success("Hello world!");
-});
+}); // hello function
 
 
 //Before we save the Game Object. We do some initial setting up. 
