@@ -29,8 +29,32 @@ function createPairings(game) {
 	game.set("pairings", pairings);
 } // createPairings()
 
-//Before we save the Game Object. We do some initial setting up. 
 
+function createScoreboard(game) {
+	var participants = game.get("participants"); //Array of user ids of participants. 
+
+	var scoreboard = {};
+
+	for (var i = 0; i < participants.length; i++) {
+		var userId = participants[i];
+		scoreboard[userId] = 0;
+	} // for
+	game.set("scoreboard", scoreboard);
+} // createScoreboard()
+
+function createSubmitted(game) {
+	var participants = game.get("participants"); //Array of user ids of participants. 
+
+	var submitted = {};
+
+	for (var i = 0; i < participants.length; i++) {
+		var userId = participants[i];
+		submitted[userId] = false;
+	} // for
+	game.set("submitted", submitted);
+} // createSubmitted()
+
+//Before we save the Game Object. We do some initial setting up. 
 Parse.Cloud.beforeSave("Game", function(request, response) {
 	console.log("BEFORE SAVE GAME CALLED!");
 	var game = request.object;
@@ -40,9 +64,9 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 		game.set("round", 1);
 
 		createPairings(game);
+		createScoreboard(game);
+		createSubmitted(game);
 
-		console.log("The pairings changed..");
-		
 		console.log("Saving game object");
 	} // if(new games)
 	response.success();
@@ -88,9 +112,10 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 				console.log("Scoreboard before: " + scoreboard);
 				console.log("SENDER: " + sender);
 				console.log("Sender id " + sender.id);
+
+				// If game is over, end it
 				var score = ++scoreboard[sender.id];
 				if (score == game.get("pointsToWin")) {
-
 					game.set("gameOver", true);
 					game.set("winner", sender);
 
@@ -108,12 +133,12 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 						}
 					});
 				}
-
 				game.set("scoreboard", scoreboard);
 
-				// reset pairings
+				// reset pairings and submitted
 				createPairings(game);
-				console.log("resetting pairings");
+				createSubmitted(game);
+				console.log("resetting pairings and submitted");
 
 				game.save(null, {
 					success: function(game) {
@@ -136,7 +161,6 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 				response.success();
 			}
 		});
-
 	} else if (rejections >= threshold) {
 		phototag.destroy();
 		response.success();
@@ -145,11 +169,21 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 			var thresh;
 			query.get(gameID, {
 				success: function(game) {
+					var submitted = game.get('submitted');
+					if (submitted[sender.id]) {
+						phototag.destroy();
+						response.success();
+					}
+
+					submitted[sender.id] = YES;
+
 					var participants = game.get('participants');
 					var count = participants.length;
-					if (count < 20)
+					if (count < 20) {
 						thresh = floor(count / 2);
-					else thresh = 10;
+					} else {
+						thresh = 10;
+					}
 					phototag.set("threshold", thresh);
 					phototag.set("rejection", 0);
 					phototag.set("confirmation", 0);
@@ -178,13 +212,11 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 							// Push was successful
 							console.log("Push sent successfully");
 							response.success();
-
 						},
 						error: function(error) {
 							// Handle error
 							console.log("Push failed..");
 							response.success();
-
 						}
 					});
 				},
