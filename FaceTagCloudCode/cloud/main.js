@@ -32,7 +32,6 @@ function createPairings(game) {
 
 function createScoreboard(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
-
 	var scoreboard = {};
 
 	for (var i = 0; i < participants.length; i++) {
@@ -44,7 +43,6 @@ function createScoreboard(game) {
 
 function createSubmitted(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
-
 	var submitted = {};
 
 	for (var i = 0; i < participants.length; i++) {
@@ -56,19 +54,14 @@ function createSubmitted(game) {
 
 //Before we save the Game Object. We do some initial setting up. 
 Parse.Cloud.beforeSave("Game", function(request, response) {
-	console.log("BEFORE SAVE GAME CALLED!");
 	var game = request.object;
 
 	if (game.isNew()) {
-
 		game.set("round", 1);
-
 		createPairings(game);
 		createScoreboard(game);
 		createSubmitted(game);
-
-		console.log("Saving game object");
-	} // if(new games)
+	} // if(new game)
 	response.success();
 });
 
@@ -82,10 +75,6 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 	var threshold = request.object.get("threshold");
 	var sender = request.object.get("sender"); //Parse.User() Object.. 
 	var gameID = request.object.get("game"); //This is a game String ID. 
-
-	console.log("Game object in PhotoTag: " + gameID);
-	console.log("confirmations: " + confirmations);
-	console.log("threshold: " + threshold);
 
 	var Game = Parse.Object.extend("Game");
 	var PhotoTag = Parse.Object.extend("PhotoTag");
@@ -142,14 +131,11 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 
 				game.save(null, {
 					success: function(game) {
-						// Execute any logic that should take place after the object is saved.
-						console.log('Game saved: ' + game.id);
+						console.log('game ' + game.id + ' saved!');
 						response.success();
 					},
 					error: function(game, error) {
-						// Execute any logic that should take place if the save fails.
-						// error is a Parse.Error with an error code and description.
-						console.log('Game didnt save error: ' + error.description);
+						console.log('game ' + game.id + ' failed to save with error: ' + error.description);
 						response.success();
 					}
 				});
@@ -175,48 +161,56 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 						response.success();
 					}
 
-					submitted[sender.id] = YES;
+					submitted[sender.id] = true;
+					game.set('submitted', submitted);
+					game.save(null, {
+						success: function(game) {
+							console.log('game ' + game.id + ' saved!');
+							var participants = game.get('participants');
+							var count = participants.length;
+							if (count < 20) {
+								thresh = Math.floor(count / 2);
+							} else {
+								thresh = 10;
+							}
+							phototag.set("threshold", thresh);
+							phototag.set("rejection", 0);
+							phototag.set("confirmation", 0);
+							var usersArray = [sender];
+							phototag.set("usersArray", usersArray);
+							phototag.set("round", game.get('round'));
 
-					var participants = game.get('participants');
-					var count = participants.length;
-					if (count < 20) {
-						thresh = floor(count / 2);
-					} else {
-						thresh = 10;
-					}
-					phototag.set("threshold", thresh);
-					phototag.set("rejection", 0);
-					phototag.set("confirmation", 0);
-					var usersArray = [sender];
-					phototag.set("usersArray", usersArray);
-					phototag.set("round", game.get('round'));
+							//For these new photo tags. Send out the push notifications as well. 
+							//Send the push to these participants. 
+							//console.log("participants:" + participants);
+							var alertString = "Someone just got facetagged!";
 
-					//For these new photo tags. Send out the push notifications as well. 
-					//Send the push to these participants. 
-					console.log("participants:" + participants);
-					var alertString = "Someone just got facetagged!";
+							var userQuery = new Parse.Query(Parse.User);
+							userQuery.containedIn("objectId", participants);
 
-					var userQuery = new Parse.Query(Parse.User);
-					userQuery.containedIn("objectId", participants);
+							var pushQuery = new Parse.Query(Parse.Installation);
+							pushQuery.matchesQuery("owner", userQuery);
 
-					var pushQuery = new Parse.Query(Parse.Installation);
-					pushQuery.matchesQuery("owner", userQuery);
-
-					Parse.Push.send({
-						where: pushQuery, // Set our Installation query
-						data: {
-							alert: alertString
-						}
-					}, {
-						success: function() {
-							// Push was successful
-							console.log("Push sent successfully");
-							response.success();
+							Parse.Push.send({
+								where: pushQuery, // Set our Installation query
+								data: {
+									alert: alertString
+								}
+							}, {
+								success: function() {
+									// Push was successful
+									console.log("Push sent successfully");
+									response.success();
+								},
+								error: function(error) {
+									// Handle error
+									console.log("Push failed..");
+									response.success();
+								}
+							});
 						},
-						error: function(error) {
-							// Handle error
-							console.log("Push failed..");
-							response.success();
+						error: function(game, error) {
+							console.log('game ' + game.id + ' failed to save with error: ' + error.description);
 						}
 					});
 				},
