@@ -7,7 +7,12 @@ Parse.Cloud.define("hello", function(request, response) {
 
 // createPairings creates the pairings for a game.
 function createPairings(game) {
-	var participants = game.get("participants"); //Array of user ids of participants. 
+	var participants = game.get("participants"); //Array of user ids of participants.
+
+	// Stop execution of pairings if there is only one participant
+	if (1 == participants.length) {
+		return;
+	}
 
 	//Clone array. http://davidwalsh.name/javascript-clone-array
 	/*
@@ -65,6 +70,15 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 	response.success();
 });
 
+//Before we save the User Object. We do some initial setting up. 
+Parse.Cloud.beforeSave("User", function(request, response) {
+	var user = request.object;
+
+	if (user.isNew()) {
+		user.set("wantsLaunchToCamera", true);
+	} // if(new game)
+	response.success();
+});
 
 //Before we save the PhotoTag Object. We do some checking! 
 Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
