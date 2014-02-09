@@ -4,8 +4,6 @@ Parse.Cloud.define("hello", function(request, response) {
 	response.success("Hello world!");
 }); // hello function
 
-
-// createPairings creates the pairings for a game.
 function createPairings(game) {
 	var participants = game.get("participants"); //Array of user ids of participants.
 
@@ -34,7 +32,6 @@ function createPairings(game) {
 	game.set("pairings", pairings);
 } // createPairings()
 
-
 function createScoreboard(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
 	var scoreboard = {};
@@ -57,6 +54,57 @@ function createSubmitted(game) {
 	game.set("submitted", submitted);
 } // createSubmitted()
 
+function updatePairings(game) {
+	var participants = game.get("participants"); //Array of user ids of participants.
+
+	// Stop execution of pairings if there is only one participant
+	if (1 == participants.length) {
+		return;
+	}
+	var pairings = game.get("pairings");
+
+	for (var i = 0; i < participants.length; i++) {
+		var userId = participants[i];
+		if (!(userId in pairings)) {
+			var target = userId;
+			while (target == userId) {
+				//Pick a random target. 
+				var random = Math.floor((Math.random() * participants.length));
+				target = participants[random];
+			} // while
+			//Add this pairing. 
+			pairings[userId] = target;
+		}
+	} // for
+	game.set("pairings", pairings);
+} // updatePairings()
+
+function updateScoreboard(game) {
+	var participants = game.get("participants"); //Array of user ids of participants. 
+	var scoreboard = game.get("scoreboard");
+
+	for (var i = 0; i < participants.length; i++) {
+		var userId = participants[i];
+		if (!(userId in scoreboard)) {
+			scoreboard[userId] = 0;
+		}
+	} // for
+	game.set("scoreboard", scoreboard);
+} // updateScoreboard()
+
+function updateSubmitted(game) {
+	var participants = game.get("participants"); //Array of user ids of participants. 
+	var submitted = game.get("submitted");
+
+	for (var i = 0; i < participants.length; i++) {
+		var userId = participants[i];
+		if (!(userId in submitted)) {
+			submitted[userId] = false;
+		}
+	} // for
+	game.set("submitted", submitted);
+} // updateSubmitted()
+
 //Before we save the Game Object. We do some initial setting up. 
 Parse.Cloud.beforeSave("Game", function(request, response) {
 	var game = request.object;
@@ -66,7 +114,11 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 		createPairings(game);
 		createScoreboard(game);
 		createSubmitted(game);
-	} // if(new game)
+	} else {
+		updatePairings(game);
+		updateScoreboard(game);
+		updateSubmitted(game);
+	}
 	response.success();
 });
 
