@@ -62,6 +62,8 @@ function updatePairings(game) {
 		return;
 	}
 	var pairings = game.get("pairings");
+	if (undefined === pairings)
+		pairings = {};
 
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i];
