@@ -125,12 +125,12 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 });
 
 //Before we save the User Object. We do some initial setting up. 
-Parse.Cloud.beforeSave("User", function(request, response) {
+Parse.Cloud.beforeSave(Parse.User, function(request, response) {
 	var user = request.object;
 
 	if (user.isNew()) {
 		user.set("wantsLaunchToCamera", true);
-	} // if(new game)
+	} // if(new user)
 	response.success();
 });
 
