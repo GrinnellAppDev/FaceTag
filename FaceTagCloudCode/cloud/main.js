@@ -4,6 +4,97 @@ Parse.Cloud.define("hello", function(request, response) {
 	response.success("Hello world!");
 }); // hello function
 
+
+// Cloud function for checking up on each game and timing rounds
+Parse.Cloud.define("check_games", function(request, response) {
+	var query = new Parse.Query("Game");
+	query.find({
+		success: function(results) {
+			// results is an array of Parse.Object
+			//	for each game in results
+			results.forEach(function(game) {
+				var endTime = game.get("endTime");
+				var now = Math.round(+new Date() / 1000);
+				if (now >= endTime) {
+					var scoreboard = game.get("Scoreboard");
+					var key;
+					var max = 0;
+					var keyOfMax;
+					for (key in scoreboard) {
+						if (scoreboard.hasOwnProperty(key) &&
+							/^0$|^[1-9]\d*$/.test(key) &&
+							key <= 4294967294) {
+							var value = scoreboard[key];
+							if (value > max) {
+								max = value;
+								keyOfMax = key;
+							}
+						}
+					}
+					var winnerID = null;
+					if (keyOfMax) {
+						winnerID = keyOfMax;
+					}
+					var userQuery = new Parse.Query(Parse.User);
+					userQuery.get(winnerID, {
+						success: function(winner) {
+							incrementRoundWithWinner(game, winner);
+						},
+						error: function(error) {
+							response.error("Error occured selecting winner: " + error.description);
+						}
+					});
+				}
+			});
+			response.success("Games updated");
+		},
+		error: function(error) {
+			response.error("Error gettings games: " + error.description);
+		}
+	});
+});
+
+function incrementRoundWithWinner(game, winner) {
+	game.increment("round", 1);
+	// Get current time in seconds
+	var endTime = Math.round(+new Date() / 1000);
+	// Add round time to it
+	endTime += game.get("timePerTurn");
+	game.set("endTime", endTime);
+	var scoreboard = game.get("scoreboard");
+	console.log("Scoreboard before: " + scoreboard);
+	console.log("Round Winner: " + winner);
+	console.log("Round Winner ID: " + winner.id);
+
+	var score = ++scoreboard[winner.id];
+
+	// If game is over, end it
+	if (score == game.get("pointsToWin")) {
+		game.set("gameOver", true);
+		game.set("winner", winner);
+
+		// Destroy PhotoTags associated with the game
+		var photoquery = new Parse.Query(PhotoTag);
+		photoquery.equalTo("game", gameID);
+		photoquery.find({
+			success: function(results) {
+				for (var i = 0; i < results.length; i++) {
+					results[i].destroy();
+				}
+				response.success("Game ended, destroyed PhotoTags");
+			},
+			error: function(error) {
+				response.error("Game ended, Destroying old PhotoTags failed");
+			}
+		});
+	}
+	game.set("scoreboard", scoreboard);
+
+	// reset pairings and submitted
+	createPairings(game);
+	createSubmitted(game);
+}
+
 function createPairings(game) {
 	var participants = game.get("participants"); //Array of user ids of participants.
 
@@ -113,6 +204,11 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 
 	if (game.isNew()) {
 		game.set("round", 1);
+		// Get current time in seconds
+		var endTime = Math.round(+new Date() / 1000);
+		// Add round time to it
+		endTime += game.get("timePerTurn");
+		game.set("endTime", endTime);
 		createPairings(game);
 		createScoreboard(game);
 		createSubmitted(game);
@@ -164,55 +260,19 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 					response.success();
 				}
 
-				game.increment("round", 1);
-				var scoreboard = game.get("scoreboard");
-				console.log("Scoreboard before: " + scoreboard);
-				console.log("SENDER: " + sender);
-				console.log("Sender id " + sender.id);
-
-				// If game is over, end it
-				var score = ++scoreboard[sender.id];
-				if (score == game.get("pointsToWin")) {
-					game.set("gameOver", true);
-					game.set("winner", sender);
-
-					var photoquery = new Parse.Query(PhotoTag);
-					photoquery.equalTo("game", gameID);
-					photoquery.find({
-						success: function(results) {
-							for (var i = 0; i < results.length; i++) {
-								results[i].destroy();
-							}
-							response.success();
-						},
-						error: function(error) {
-							response.success();
-						}
-					});
-				}
-				game.set("scoreboard", scoreboard);
-
-				// reset pairings and submitted
-				createPairings(game);
-				createSubmitted(game);
-				console.log("resetting pairings and submitted");
+				incrementRoundWithWinner(game, sender);
 
 				game.save(null, {
 					success: function(game) {
-						console.log('game ' + game.id + ' saved!');
-						response.success();
+						response.success('game ' + game.id + ' saved!');
 					},
 					error: function(game, error) {
-						console.log('game ' + game.id + ' failed to save with error: ' + error.description);
-						response.success();
+						response.error('game ' + game.id + ' failed to save with error: ' + error.description);
 					}
 				});
 			},
 			error: function(object, error) {
-				// The object was not retrieved successfully.
-				// error is a Parse.Error with an error code and description.
-				console.log("Error. Game not retrieved: " + error.description);
-				response.success();
+				response.error("Error. Game not retrieved: " + error.description);
 			}
 		});
 	} else if (rejections >= threshold) {
@@ -266,30 +326,24 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 								}
 							}, {
 								success: function() {
-									// Push was successful
-									console.log("Push sent successfully");
-									response.success();
+									response.success("Push sent successfully");
 								},
 								error: function(error) {
-									// Handle error
-									console.log("Push failed..");
-									response.success();
+									response.error("Push failed with error: " + error.description);
 								}
 							});
 						},
 						error: function(game, error) {
-							console.log('game ' + game.id + ' failed to save with error: ' + error.description);
+							response.error('game ' + game.id + ' failed to save with error: ' + error.description);
 						}
 					});
 				},
 				error: function(game, error) {
-					console.log("error fetching game " + error.description);
-					response.success();
+					response.success("error fetching game " + error.description);
 				}
 			});
 		} else {
-			response.success();
-			console.log("Saving phototag: " + phototag);
+			response.success("Saving phototag: " + phototag);
 		}
 	}
 
@@ -334,19 +388,19 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 				pushQuery.matchesQuery("owner", userQuery); 
 
 				Parse.Push.send({
-					  where: pushQuery, // Set our Installation query
-					  data: {
-					    alert: alertString
-					  }
+					where: pushQuery, // Set our Installation query
+						data: {
+							alert: alertString
+						}
 					}, {
-					  success: function() {
-					    // Push was successful
-					    console.log("Push sent successfully"); 
-					  },
-					  error: function(error) {
-					    // Handle error
-					    console.log("Push failed.."); 
-					  }
+						success: function() {
+							// Push was successful
+							console.log("Push sent successfully"); 
+						},
+						error: function(error) {
+							// Handle error
+							console.log("Push failed.."); 
+						}
 					});
 				//response.success();
 			}, error: function (game, error) {
