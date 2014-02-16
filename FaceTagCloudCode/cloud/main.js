@@ -16,6 +16,9 @@ Parse.Cloud.define("check_games", function(request, response) {
 				var endTime = game.get("endTime");
 				var now = Math.round(+new Date() / 1000);
 				if (now >= endTime) {
+					// Select a winner
+					// TODO - THIS IS WRONG
+					//  Round winner should be phototag with highest votes, not current leader in points
 					var scoreboard = game.get("Scoreboard");
 					var key;
 					var max = 0;
@@ -35,6 +38,7 @@ Parse.Cloud.define("check_games", function(request, response) {
 					if (keyOfMax) {
 						winnerID = keyOfMax;
 					}
+					// TODO - Handle case where nobody has points
 					var userQuery = new Parse.Query(Parse.User);
 					userQuery.get(winnerID, {
 						success: function(winner) {
@@ -339,7 +343,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 					});
 				},
 				error: function(game, error) {
-					response.success("error fetching game " + error.description);
+					response.error("error fetching game " + error.description);
 				}
 			});
 		} else {
