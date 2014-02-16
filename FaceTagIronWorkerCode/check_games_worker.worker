@@ -1,0 +1,3 @@
+runtime 'node'
+name 'CheckFaceTagGamesNode'
+exec 'check_facetag_games.js'
