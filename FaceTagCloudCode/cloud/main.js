@@ -17,35 +17,28 @@ Parse.Cloud.define("check_games", function(request, response) {
 				var now = Math.round(+new Date() / 1000);
 				if (now >= endTime) {
 					// Select a winner
-					// TODO - THIS IS WRONG
-					//  Round winner should be phototag with highest votes, not current leader in points
-					var scoreboard = game.get("Scoreboard");
-					var key;
-					var max = 0;
-					var keyOfMax;
-					for (key in scoreboard) {
-						if (scoreboard.hasOwnProperty(key) &&
-							/^0$|^[1-9]\d*$/.test(key) &&
-							key <= 4294967294) {
-							var value = scoreboard[key];
-							if (value > max) {
-								max = value;
-								keyOfMax = key;
+					var photoquery = new Parse.Query("PhotoTag");
+					photoquery.equalTo("game", game.id);
+					photoquery.find({
+						success: function(photoTags) {
+							var leader = -1;
+							var leadVal = 0;
+							for (var i = 0; i < photoTags.length; i++) {
+								if (leadVal < photoTags[i].get("confirmation")) {
+									leadVal = photoTags[i].get("confirmation");
+									leader = i;
+								}
 							}
-						}
-					}
-					var winnerID = null;
-					if (keyOfMax) {
-						winnerID = keyOfMax;
-					}
-					// TODO - Handle case where nobody has points
-					var userQuery = new Parse.Query(Parse.User);
-					userQuery.get(winnerID, {
-						success: function(winner) {
-							incrementRoundWithWinner(game, winner);
+							if (0 > leader) {
+								// If no winner
+								incrementRound(game);
+							} else {
+								var winner = hotoTags[leader].get("sender");
+								incrementRoundWithWinner(game, winner);
+							}
 						},
 						error: function(error) {
-							response.error("Error occured selecting winner: " + error.description);
+							response.error("Error occured searching photoTags: " + error.description);
 						}
 					});
 				}
@@ -58,13 +51,25 @@ Parse.Cloud.define("check_games", function(request, response) {
 	});
 });
 
-function incrementRoundWithWinner(game, winner) {
-	game.increment("round", 1);
+// Update game end time
+function updateEndTime(game) {
 	// Get current time in seconds
 	var endTime = Math.round(+new Date() / 1000);
 	// Add round time to it
 	endTime += game.get("timePerTurn");
 	game.set("endTime", endTime);
+}
+
+// Increments round, updates pairings/submitted/end time 
+function incrementRound(game) {
+	game.increment("round", 1);
+	updateEndTime(game);
+	createPairings(game);
+	createSubmitted(game);
+}
+
+// Updates scoreboard, ends game if necessary
+function incrementRoundWithWinner(game, winner) {
 	var scoreboard = game.get("scoreboard");
 	console.log("Scoreboard before: " + scoreboard);
 	console.log("Round Winner: " + winner);
@@ -78,8 +83,8 @@ function incrementRoundWithWinner(game, winner) {
 		game.set("winner", winner);
 
 		// Destroy PhotoTags associated with the game
-		var photoquery = new Parse.Query(PhotoTag);
-		photoquery.equalTo("game", gameID);
+		var photoquery = new Parse.Query("PhotoTag");
+		photoquery.equalTo("game", game.id);
 		photoquery.find({
 			success: function(results) {
 				for (var i = 0; i < results.length; i++) {
@@ -91,12 +96,10 @@ function incrementRoundWithWinner(game, winner) {
 				response.error("Game ended, Destroying old PhotoTags failed");
 			}
 		});
+	} else {
+		incrementRound(game);
+		game.set("scoreboard", scoreboard);
 	}
-	game.set("scoreboard", scoreboard);
-
-	// reset pairings and submitted
-	createPairings(game);
-	createSubmitted(game);
 }
 
 function createPairings(game) {
@@ -107,12 +110,7 @@ function createPairings(game) {
 		return;
 	}
 
-	//Clone array. http://davidwalsh.name/javascript-clone-array
-	/*
-	var participantsCopy = participants.slice(0);
-	*/
 	var pairings = {};
-
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i];
 		var target = userId;
@@ -208,15 +206,11 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 
 	if (game.isNew()) {
 		game.set("round", 1);
-		// Get current time in seconds
-		var endTime = Math.round(+new Date() / 1000);
-		// Add round time to it
-		endTime += game.get("timePerTurn");
-		game.set("endTime", endTime);
+		updateEndTime(game);
 		createPairings(game);
 		createScoreboard(game);
 		createSubmitted(game);
-	} else {
+	} else { // Someone may have just joined the game
 		updatePairings(game);
 		updateScoreboard(game);
 		updateSubmitted(game);
@@ -244,10 +238,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 	var sender = request.object.get("sender"); //Parse.User() Object.. 
 	var gameID = request.object.get("game"); //This is a game String ID. 
 
-	var Game = Parse.Object.extend("Game");
-	var PhotoTag = Parse.Object.extend("PhotoTag");
-	var query = new Parse.Query(Game);
-
+	var query = new Parse.Query("Game");
 	if (confirmations >= threshold) {
 		//Win Condition. 
 		console.log("Win condition met!");
@@ -371,8 +362,7 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 	//var alert = senderFirstName + " just snapped " + targetFirstName;
 	var alertString = "Someone just got facetagged!";
 
-	var Game = Parse.Object.extend("Game");
-	var query = new Parse.Query(Game);
+	var query = new Parse.Query("Game");
 	
 
 	var phototag = request.object;
@@ -415,4 +405,9 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 		console.log("PhotoTag is not new"); 
 	}
 });
+*/
+
+//Clone array. http://davidwalsh.name/javascript-clone-array
+/*
+var participantsCopy = participants.slice(0);
 */
