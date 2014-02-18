@@ -29,8 +29,7 @@ Parse.Cloud.define("check_games", function(request, response) {
 									leader = i;
 								}
 							}
-							if (0 > leader) {
-								// If no winner
+							if (0 > leader) { // If no winner
 								incrementRound(game);
 							} else {
 								var winner = photoTags[leader].get("sender");
@@ -67,7 +66,12 @@ Parse.Cloud.define("check_games", function(request, response) {
 });
 
 // Update game end time
-function updateEndTime(game) {
+function setEndTime(game) {
+	var participants = game.get("participants");
+	if (1 == participants.length) {
+		return; // Don't set endTime on a round until round starts
+	}
+
 	// Get current time in seconds
 	var endTime = Math.round(+new Date() / 1000);
 	// Add round time to it
@@ -78,7 +82,7 @@ function updateEndTime(game) {
 // Increments round, updates pairings/submitted/end time 
 function incrementRound(game) {
 	game.increment("round", 1);
-	updateEndTime(game);
+	setEndTime(game);
 	createPairings(game);
 	createSubmitted(game);
 }
@@ -133,12 +137,12 @@ function createPairings(game) {
 			//Pick a random target. 
 			var random = Math.floor((Math.random() * participants.length));
 			target = participants[random];
-		} // while
+		}
 		//Add this pairing. 
 		pairings[userId] = target;
-	} // for
+	}
 	game.set("pairings", pairings);
-} // createPairings()
+}
 
 function createScoreboard(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
@@ -147,9 +151,9 @@ function createScoreboard(game) {
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i];
 		scoreboard[userId] = 0;
-	} // for
+	}
 	game.set("scoreboard", scoreboard);
-} // createScoreboard()
+}
 
 function createSubmitted(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
@@ -158,9 +162,16 @@ function createSubmitted(game) {
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i];
 		submitted[userId] = false;
-	} // for
+	}
 	game.set("submitted", submitted);
-} // createSubmitted()
+}
+
+function updateEndTime(game) {
+	var endTime = game.get("endTime");
+	if (undefined === endTime) {
+		setEndTime(game);
+	}
+}
 
 function updatePairings(game) {
 	var participants = game.get("participants"); //Array of user ids of participants.
@@ -170,8 +181,9 @@ function updatePairings(game) {
 		return;
 	}
 	var pairings = game.get("pairings");
-	if (undefined === pairings)
+	if (undefined === pairings) {
 		pairings = {};
+	}
 
 	for (var i = 0; i < participants.length; i++) {
 		var userId = participants[i];
@@ -181,13 +193,13 @@ function updatePairings(game) {
 				//Pick a random target. 
 				var random = Math.floor((Math.random() * participants.length));
 				target = participants[random];
-			} // while
+			}
 			//Add this pairing. 
 			pairings[userId] = target;
 		}
-	} // for
+	}
 	game.set("pairings", pairings);
-} // updatePairings()
+}
 
 function updateScoreboard(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
@@ -198,9 +210,9 @@ function updateScoreboard(game) {
 		if (!(userId in scoreboard)) {
 			scoreboard[userId] = 0;
 		}
-	} // for
+	}
 	game.set("scoreboard", scoreboard);
-} // updateScoreboard()
+}
 
 function updateSubmitted(game) {
 	var participants = game.get("participants"); //Array of user ids of participants. 
@@ -211,9 +223,9 @@ function updateSubmitted(game) {
 		if (!(userId in submitted)) {
 			submitted[userId] = false;
 		}
-	} // for
+	}
 	game.set("submitted", submitted);
-} // updateSubmitted()
+}
 
 //Before we save the Game Object. We do some initial setting up. 
 Parse.Cloud.beforeSave("Game", function(request, response) {
@@ -221,11 +233,12 @@ Parse.Cloud.beforeSave("Game", function(request, response) {
 
 	if (game.isNew()) {
 		game.set("round", 1);
-		updateEndTime(game);
+		setEndTime(game);
 		createPairings(game);
 		createScoreboard(game);
 		createSubmitted(game);
 	} else { // Someone may have just joined the game
+		updateEndTime(game);
 		updatePairings(game);
 		updateScoreboard(game);
 		updateSubmitted(game);
@@ -239,7 +252,7 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
 
 	if (user.isNew()) {
 		user.set("wantsLaunchToCamera", true);
-	} // if(new user)
+	}
 	response.success();
 });
 
@@ -255,11 +268,9 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 
 	var query = new Parse.Query("Game");
 	if (confirmations >= threshold) {
-		//Round win Condition. 
+		//Round win condition, update scores
 		console.log("Round win condition met!");
 		//Todo - Handle timings of tags. 
-
-		//Update scores.  
 
 		//Get game. 
 		query.get(gameId, {
