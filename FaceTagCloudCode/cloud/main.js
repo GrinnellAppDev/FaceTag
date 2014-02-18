@@ -90,10 +90,10 @@ function incrementRoundWithWinner(game, winner) {
 				for (var i = 0; i < results.length; i++) {
 					results[i].destroy();
 				}
-				response.success("Game ended, destroyed PhotoTags");
+				console.log("Game " + game.id + " ended, destroyed PhotoTags");
 			},
 			error: function(error) {
-				response.error("Game ended, Destroying old PhotoTags failed");
+				response.error("Game " + game.id + " ended, Destroying old PhotoTags failed");
 			}
 		});
 	} else {
@@ -236,23 +236,23 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 	var rejections = request.object.get("rejection");
 	var threshold = request.object.get("threshold");
 	var sender = request.object.get("sender"); //Parse.User() Object.. 
-	var gameID = request.object.get("game"); //This is a game String ID. 
+	var gameId = request.object.get("game"); //This is a game String ID. 
 
 	var query = new Parse.Query("Game");
 	if (confirmations >= threshold) {
-		//Win Condition. 
-		console.log("Win condition met!");
+		//Round win Condition. 
+		console.log("Round win condition met!");
 		//Todo - Handle timings of tags. 
 
 		//Update scores.  
 
 		//Get game. 
-		query.get(gameID, {
+		query.get(gameId, {
 			success: function(game) {
 				console.log("success");
 				if (phototag.get("round") != game.get("round")) {
 					phototag.destroy();
-					response.success();
+					response.success("PhotoTag was for wrong round. Deleted it.");
 				}
 
 				incrementRoundWithWinner(game, sender);
@@ -272,11 +272,11 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 		});
 	} else if (rejections >= threshold) {
 		phototag.destroy();
-		response.success();
+		response.success("PhotoTag was rejected too many times!");
 	} else {
 		if (phototag.isNew()) {
 			var thresh;
-			query.get(gameID, {
+			query.get(gameId, {
 				success: function(game) {
 					var submitted = game.get('submitted');
 					if (submitted[sender.id]) {
@@ -355,7 +355,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 /*
 Parse.Cloud.afterSave("PhotoTag", function(request) {
 
-	var gameID = request.object.get("game");  //This is a game String ID. 
+	var gameId = request.object.get("game");  //This is a game String ID. 
 	var senderFirstName = request.object.get("sender").get("firstName");  //Parse.User() Object.. 
 	var targetFirstName = request.object.get("target").get("firstName");
 
@@ -369,7 +369,7 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 
 	if ( phototag.isNew() ) {
 			console.log(alert); 
-				query.get(gameID, {
+				query.get(gameId, {
 			success: function(game) {
 				var participants = game.get('participants');
 				//Send the push to these participants. 
