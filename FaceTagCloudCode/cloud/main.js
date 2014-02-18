@@ -33,17 +33,32 @@ Parse.Cloud.define("check_games", function(request, response) {
 								// If no winner
 								incrementRound(game);
 							} else {
-								var winner = hotoTags[leader].get("sender");
+								var winner = photoTags[leader].get("sender");
 								incrementRoundWithWinner(game, winner);
 							}
+							game.save(null, {
+								success: function(game) {
+									var index = results.indexOf(game);
+									if (index >= results.length - 1) {
+										response.success('games updated');
+									}
+								},
+								error: function(game, error) {
+									response.error('game ' + game.id + ' failed to save with error: ' + error.description);
+								}
+							});
 						},
 						error: function(error) {
 							response.error("Error occured searching photoTags: " + error.description);
 						}
 					});
+				} else {
+					var index = results.indexOf(game);
+					if (index >= results.length - 1) {
+						response.success('games updated');
+					}
 				}
 			});
-			response.success("Games updated");
 		},
 		error: function(error) {
 			response.error("Error gettings games: " + error.description);
@@ -90,7 +105,7 @@ function incrementRoundWithWinner(game, winner) {
 				for (var i = 0; i < results.length; i++) {
 					results[i].destroy();
 				}
-				response.success("Game ended, destroyed PhotoTags");
+				console.log("Game ended, destroyed PhotoTags");
 			},
 			error: function(error) {
 				response.error("Game ended, Destroying old PhotoTags failed");
@@ -236,20 +251,19 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 	var rejections = request.object.get("rejection");
 	var threshold = request.object.get("threshold");
 	var sender = request.object.get("sender"); //Parse.User() Object.. 
-	var gameID = request.object.get("game"); //This is a game String ID. 
+	var gameId = request.object.get("game"); //This is a game String ID. 
 
 	var query = new Parse.Query("Game");
 	if (confirmations >= threshold) {
-		//Win Condition. 
-		console.log("Win condition met!");
+		//Round win Condition. 
+		console.log("Round win condition met!");
 		//Todo - Handle timings of tags. 
 
 		//Update scores.  
 
 		//Get game. 
-		query.get(gameID, {
+		query.get(gameId, {
 			success: function(game) {
-				console.log("success");
 				if (phototag.get("round") != game.get("round")) {
 					phototag.destroy();
 					response.success();
@@ -259,7 +273,8 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 
 				game.save(null, {
 					success: function(game) {
-						response.success('game ' + game.id + ' saved!');
+						console.log("game " + game.id + " saved!");
+						response.success();
 					},
 					error: function(game, error) {
 						response.error('game ' + game.id + ' failed to save with error: ' + error.description);
@@ -276,7 +291,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 	} else {
 		if (phototag.isNew()) {
 			var thresh;
-			query.get(gameID, {
+			query.get(gameId, {
 				success: function(game) {
 					var submitted = game.get('submitted');
 					if (submitted[sender.id]) {
@@ -321,7 +336,8 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 								}
 							}, {
 								success: function() {
-									response.success("Push sent successfully");
+									console.log("Push sent successfully");
+									response.success();
 								},
 								error: function(error) {
 									response.error("Push failed with error: " + error.description);
@@ -338,7 +354,8 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 				}
 			});
 		} else {
-			response.success("Saving phototag: " + phototag);
+			console.log("Saving phototag: " + phototag);
+			response.success();
 		}
 	}
 
