@@ -105,10 +105,10 @@ function incrementRoundWithWinner(game, winner) {
 				for (var i = 0; i < results.length; i++) {
 					results[i].destroy();
 				}
-				console.log("Game ended, destroyed PhotoTags");
+				console.log("Game " + game.id + " ended, destroyed PhotoTags");
 			},
 			error: function(error) {
-				response.error("Game ended, Destroying old PhotoTags failed");
+				response.error("Game " + game.id + " ended, Destroying old PhotoTags failed");
 			}
 		});
 	} else {
@@ -266,6 +266,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 			success: function(game) {
 				if (phototag.get("round") != game.get("round")) {
 					phototag.destroy();
+					console.log("PhotoTag was for wrong round. Deleted it.");
 					response.success();
 				}
 
@@ -287,6 +288,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 		});
 	} else if (rejections >= threshold) {
 		phototag.destroy();
+		console.log("PhotoTag was rejected too many times!");
 		response.success();
 	} else {
 		if (phototag.isNew()) {
@@ -372,7 +374,7 @@ Parse.Cloud.beforeSave("PhotoTag", function(request, response) {
 /*
 Parse.Cloud.afterSave("PhotoTag", function(request) {
 
-	var gameID = request.object.get("game");  //This is a game String ID. 
+	var gameId = request.object.get("game");  //This is a game String ID. 
 	var senderFirstName = request.object.get("sender").get("firstName");  //Parse.User() Object.. 
 	var targetFirstName = request.object.get("target").get("firstName");
 
@@ -386,7 +388,7 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 
 	if ( phototag.isNew() ) {
 			console.log(alert); 
-				query.get(gameID, {
+				query.get(gameId, {
 			success: function(game) {
 				var participants = game.get('participants');
 				//Send the push to these participants. 
@@ -413,7 +415,7 @@ Parse.Cloud.afterSave("PhotoTag", function(request) {
 							console.log("Push failed.."); 
 						}
 					});
-				//response.success();
+					//response.success();
 			}, error: function (game, error) {
 				console.log("error  in sending push " + error.description);
 				//response.success();
